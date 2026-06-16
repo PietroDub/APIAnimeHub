@@ -9,6 +9,7 @@ namespace APIAnimeHub.Dto
         public int AnimeId { get; set; }
 
         public AnimeStatus Status { get; set; }
+
         public int? Score { get; set; }
     }
 }

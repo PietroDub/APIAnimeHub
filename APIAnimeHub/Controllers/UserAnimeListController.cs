@@ -21,7 +21,7 @@ namespace APIAnimeHub.Controllers
             _userRepository = userRepository;
         }
         [HttpPost]
-        public async Task<ActionResult> AdicionarAnimeAsync(AddAnimeDto dto)
+        public async Task<ActionResult> AdicionarAnimeAsync([FromBody] AddAnimeDto dto)
         {
             var user = await _userRepository.GetByIdAsync(dto.UserId);
 
@@ -43,7 +43,8 @@ namespace APIAnimeHub.Controllers
                 UserId = dto.UserId,
                 AnimeId = dto.AnimeId,
                 AddedDate = DateTime.UtcNow,
-                Status = dto.Status
+                Status = dto.Status,
+                Score = dto.Score
             };
 
             if (dto.Status == AnimeStatus.Completed)
@@ -96,15 +97,16 @@ namespace APIAnimeHub.Controllers
             {
                 anime.CompletedAt = DateTime.UtcNow;
             }
-            if (dto.EpisodesWatched < 0)
+            if (dto.EpisodesWatched < 0 || dto.EpisodesWatched > 10)
             {
                 return BadRequest("Quantidade inválida.");
             }
 
-
             anime.Status = dto.Status;
             anime.EpisodesWatched = dto.EpisodesWatched;
-            
+            anime.Score = dto.Score;
+
+
             await _userAnimeListRepository.UpdateAsync(anime);
 
             return NoContent();

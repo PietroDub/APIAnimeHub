@@ -19,8 +19,14 @@ namespace APIAnimeHub.Controllers
             [HttpPost]
             public async Task<ActionResult> RegisterUser(RegisterUserDto dto)
             {
+            var exists = await _userRepository.GetByEmailAsync(dto.Email);
 
-                var user = new User
+            if (exists != null)
+            {
+                return BadRequest("Email já cadastrado.");
+            }
+
+            var user = new User
                 {
                     Name = dto.Name,
                     Email = dto.Email,
