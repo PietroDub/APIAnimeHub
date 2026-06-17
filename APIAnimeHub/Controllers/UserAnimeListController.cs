@@ -1,9 +1,11 @@
 ﻿using APIAnimeHub.Dto;
 using APIAnimeHub.Models;
 using APIAnimeHub.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.NetworkInformation;
+using System.Security.Claims;
 
 namespace APIAnimeHub.Controllers
 {
@@ -23,13 +25,25 @@ namespace APIAnimeHub.Controllers
         [HttpPost]
         public async Task<ActionResult> AdicionarAnimeAsync([FromBody] AddAnimeDto dto)
         {
-            var user = await _userRepository.GetByIdAsync(dto.UserId);
+            //pega pelo jwt
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            //checa se existe
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            //transforma em guid
+            var userId = Guid.Parse(userIdClaim);
+
+            var user = await _userRepository.GetByIdAsync(userId);
 
             if (user == null)
             {
                 return NotFound("User não encontrado");
             }
-            var exists = await _userAnimeListRepository.AnimeAlreadyExists(dto.UserId, dto.AnimeId);
+            var exists = await _userAnimeListRepository.AnimeAlreadyExists(userId, dto.AnimeId);
 
             if (exists != null)
             {
@@ -40,7 +54,7 @@ namespace APIAnimeHub.Controllers
 
             var anime = new UserAnimeList
             {
-                UserId = dto.UserId,
+                UserId = userId,
                 AnimeId = dto.AnimeId,
                 AddedDate = DateTime.UtcNow,
                 Status = dto.Status,
@@ -57,14 +71,26 @@ namespace APIAnimeHub.Controllers
             return Ok(anime);
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult> GetUserAnimeList(Guid userId)
+        [Authorize]
+        [HttpGet("my-list")]
+        public async Task<ActionResult> GetMyAnimeList()
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if(userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var userId = Guid.Parse(userIdClaim);
+
             var animeList = await _userAnimeListRepository.GetUserAnimeListsAsync(userId);
+
             if (!animeList.Any())
             {
                 return NotFound("Nenhum anime encontrado.");
             }
+
             return Ok(animeList);
         }
 
@@ -73,6 +99,20 @@ namespace APIAnimeHub.Controllers
         public async Task<ActionResult> GetAnimeByIdAsync(Guid id)
         {
             var animeListItem = await _userAnimeListRepository.GetByIdAsync(id);
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var userId = Guid.Parse(userIdClaim);
+
+            if(userId != animeListItem.UserId)
+            {
+                return Forbid();
+            }
 
             if (animeListItem == null)
             {
@@ -83,10 +123,25 @@ namespace APIAnimeHub.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
 
         public async Task<ActionResult> UpdateAnimeListAsync(UpdateAnimeDto dto, Guid id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var userId = Guid.Parse(userIdClaim);
+
             var anime = await _userAnimeListRepository.GetByIdAsync(id);
+
+            if (userId != anime.UserId)
+            {
+                return Forbid();
+            }
 
             if (anime == null)
             {
@@ -116,7 +171,21 @@ namespace APIAnimeHub.Controllers
 
         public async Task<ActionResult> DeleteAnimeAsync(Guid id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var userId = Guid.Parse(userIdClaim);
+
             var anime = await _userAnimeListRepository.GetByIdAsync(id);
+
+            if (userId != anime.UserId)
+            {
+                return Forbid();
+            }
 
             if (anime == null)
             {

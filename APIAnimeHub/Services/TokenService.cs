@@ -82,6 +82,12 @@ namespace APIAnimeHub.Services
                 )
             );
 
+            ci.AddClaim(
+                new Claim(
+                        ClaimTypes.NameIdentifier, user.Id.ToString()
+                    )
+            );
+
             return ci;
         }
     }

@@ -4,7 +4,8 @@ namespace APIAnimeHub.Dto
 {
     public class AddAnimeDto
     {
-        public Guid UserId { get; set; }
+        //   agora faremos com JWT
+        //public Guid UserId { get; set; }
 
         public int AnimeId { get; set; }
 

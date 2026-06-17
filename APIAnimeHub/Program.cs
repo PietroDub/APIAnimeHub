@@ -18,6 +18,8 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserAnimeListRepository>();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<TokenService>();
+builder.Services.AddHttpClient();
+builder.Services.AddTransient<JikanService>();
 
 builder.Services.AddAuthorization();
 // Configura a autenticação da aplicação utilizando JWT Bearer
