@@ -1,8 +1,11 @@
 ﻿using APIAnimeHub.Dto;
 using APIAnimeHub.Models;
 using APIAnimeHub.Repositories;
+using APIAnimeHub.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace APIAnimeHub.Controllers
 {
@@ -11,9 +14,13 @@ namespace APIAnimeHub.Controllers
     public class AuthController : ControllerBase
     {
            private readonly UserRepository _userRepository;
-            public AuthController(UserRepository userRepository)
+
+           private readonly TokenService _tokenService;
+
+        public AuthController(UserRepository userRepository, TokenService tokenService)
             {
                 _userRepository = userRepository;
+                _tokenService = tokenService;
             }
 
             [HttpPost]
@@ -57,13 +64,28 @@ namespace APIAnimeHub.Controllers
                     return Unauthorized("Email ou senha inválidos");
                 }
 
-                return Ok(user);
+                var token = _tokenService.GenerateToken(user);
+
+                return Ok(token);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return StatusCode(500, "Erro interno no servidor");
             }
+        }
+
+        // uma rota de teste que busca e trás o email a partir das claims
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            var email = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            return Ok(new
+            {
+                Email = email
+            });
         }
     }
 }
