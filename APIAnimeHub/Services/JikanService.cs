@@ -115,5 +115,63 @@ namespace APIAnimeHub.Services
                 );
             }
         }
+
+        public async Task<SeasonsArchiveResponseDto?> GetAllSeasons()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"https://api.jikan.moe/v4/seasons");
+
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+
+                var result = JsonSerializer.Deserialize<SeasonsArchiveResponseDto>(
+                    json,
+                    new JsonSerializerOptions {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                return result;
+            }
+            catch (HttpRequestException ex) {
+                
+                throw new Exception(
+                $"Erro ao consultar Jikan: {ex.Message}"
+                
+                );
+            }
+        }
+
+        public async Task<AnimeSearchResponseDto> GetOneSeason(int year, string station)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"https://api.jikan.moe/v4/seasons/{year}/{station}");
+
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+
+                var result = JsonSerializer.Deserialize<AnimeSearchResponseDto>(
+                    json,
+                    new JsonSerializerOptions
+                    {
+                        //Ele ignora diferença de:
+                        //maiúsculas vs minúsculas
+                        //PascalCase vs camelCase
+                        PropertyNameCaseInsensitive = true
+                    }
+                );
+
+                return result;
+            }
+            catch(HttpRequestException ex)
+            {
+                throw new Exception(
+                    $"Erro ao consultar Jikan: {ex.Message}"
+                );
+            }
+        }
     }
 }

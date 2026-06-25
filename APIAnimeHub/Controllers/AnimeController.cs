@@ -54,5 +54,21 @@ namespace APIAnimeHub.Controllers
 
             return Ok(animes);
         }
+
+        [HttpGet("seasons")]
+        public async Task<ActionResult> GetAllSeasons()
+        {
+            var seasons = await _jikanService.GetAllSeasons();
+
+            return Ok(seasons);
+        }
+
+        [HttpGet("season/year/station")]
+        public async Task<ActionResult> GetSeason(int year, string station)
+        {
+            var season = await _jikanService.GetOneSeason(year, station);
+
+            return Ok(season);
+        }
     }
 }
